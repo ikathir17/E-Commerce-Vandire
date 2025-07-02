@@ -1,0 +1,169 @@
+import { v2 as cloudinary } from "cloudinary"
+import productModel from "../models/productModel.js"
+
+// function for add product
+const addProduct = async (req, res) => {
+    try {
+
+        const { name, description, price, category, subCategory, sizes, bestseller } = req.body
+
+        const image1 = req.files.image1 && req.files.image1[0]
+        const image2 = req.files.image2 && req.files.image2[0]
+        const image3 = req.files.image3 && req.files.image3[0]
+        const image4 = req.files.image4 && req.files.image4[0]
+
+        const images = [image1, image2, image3, image4].filter((item) => item !== undefined)
+
+        let imagesUrl = await Promise.all(
+            images.map(async (item) => {
+                let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
+                return result.secure_url
+            })
+        )
+
+        const productData = {
+            name,
+            description,
+            category,
+            price: Number(price),
+            subCategory,
+            bestseller: bestseller === "true" ? true : false,
+            sizes: JSON.parse(sizes),
+            image: imagesUrl,
+            date: Date.now()
+        }
+
+        console.log(productData);
+
+        const product = new productModel(productData);
+        await product.save()
+
+        res.json({ success: true, message: "Product Added" })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// function for list product
+const listProducts = async (req, res) => {
+    try {
+        
+        const products = await productModel.find({});
+        res.json({success:true,products})
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// function for removing product
+const removeProduct = async (req, res) => {
+    try {
+        
+        await productModel.findByIdAndDelete(req.body.id)
+        res.json({success:true,message:"Product Removed"})
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// function for single product info
+const singleProduct = async (req, res) => {
+    try {
+        
+        const { productId } = req.body
+        const product = await productModel.findById(productId)
+        res.json({success:true,product})
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// function for update product
+const updateProduct = async (req, res) => {
+    try {
+        const { id, name, description, price, category, subCategory, sizes, bestseller, discount } = req.body;
+        const updateData = {
+            name,
+            description,
+            price: Number(price),
+            category,
+            subCategory,
+            bestseller: bestseller === "true" || bestseller === true,
+            sizes: JSON.parse(sizes),
+            discount: Number(discount) || 0,
+            $set: {}
+        };
+        
+        // Only include stock in update if it was provided
+        if (Object.keys(stockUpdate).length > 0) {
+            // Convert stock object to map format
+            const stockMap = new Map();
+            Object.entries(stockUpdate).forEach(([size, quantity]) => {
+                stockMap.set(size, parseInt(quantity, 10) || 0);
+            });
+            updateData.$set.stock = Object.fromEntries(stockMap);
+        }
+        // Handle images if provided
+        if (req.files) {
+            const imageFields = ['image1', 'image2', 'image3', 'image4'];
+            let images = imageFields.map(field => req.files[field] && req.files[field][0]).filter(Boolean);
+            if (images.length > 0) {
+                let imagesUrl = await Promise.all(
+                    images.map(async (item) => {
+                        let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
+                        return result.secure_url
+                    })
+                );
+                updateData.image = imagesUrl;
+            }
+        }
+        await productModel.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        res.json({ success: true, message: "Product Updated" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Add or edit review to product
+const addReview = async (req, res) => {
+    try {
+        const { productId, userId, rating, feedback } = req.body;
+        // Ensure rating is a number and between 1 and 5
+        if (!productId || !userId || typeof rating === 'undefined' || rating === null) {
+            return res.json({ success: false, message: 'Missing required fields.' });
+        }
+        const parsedRating = Number(rating);
+        if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+            return res.json({ success: false, message: 'Rating must be between 1 and 5.' });
+        }
+        // Find product and update or add review
+        const product = await productModel.findById(productId);
+        if (!product) return res.json({ success: false, message: 'Product not found.' });
+        let updated = false;
+        product.reviews = product.reviews.map(r => {
+            if (r.userId === userId) {
+                updated = true;
+                return { ...r.toObject(), rating: parsedRating, feedback, date: new Date() };
+            }
+            return r;
+        });
+        if (!updated) {
+            product.reviews.push({ userId, rating: parsedRating, feedback });
+        }
+        await product.save();
+        res.json({ success: true, message: updated ? 'Review updated.' : 'Review added successfully.' });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { listProducts, addProduct, removeProduct, singleProduct, updateProduct, addReview }
