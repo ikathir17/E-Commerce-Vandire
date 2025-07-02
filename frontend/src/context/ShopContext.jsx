@@ -14,7 +14,8 @@ export const ShopContextProvider = (props) => {
     const [showSearch, setShowSearch] = useState(false);
     const [cartItems, setCartItems] = useState({});
     const [products, setProducts] = useState([]);
-    const [token, setToken] = useState('');
+    const [token, setToken] = useState(localStorage.getItem('token') || '');
+    const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail') || '');
     const [wishlist, setWishlist] = useState([]);
     const [isWishlistLoading, setIsWishlistLoading] = useState(false);
     const navigate = useNavigate();
@@ -485,10 +486,12 @@ export const ShopContextProvider = (props) => {
         try {
             const response = await axios.post(backendUrl + '/api/user/login', { email, password });
             if (response.data.success) {
-                const { token, userId } = response.data;
+                const { token, userId, email: userEmail } = response.data;
                 localStorage.setItem('token', token);
                 localStorage.setItem('userId', userId);
+                localStorage.setItem('userEmail', userEmail || email);
                 setToken(token);
+                setUserEmail(userEmail || email);
                 
                 // Fetch user's cart and wishlist
                 const [cartRes, wishlistRes] = await Promise.all([
@@ -544,7 +547,9 @@ export const ShopContextProvider = (props) => {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
+        localStorage.removeItem('userEmail');
         setToken('');
+        setUserEmail('');
         setCartItems({});
         setWishlist([]);
         navigate('/');
@@ -573,6 +578,7 @@ export const ShopContextProvider = (props) => {
         token,
         setToken,
         login,
+        userEmail,
         logout,
         getProductQuantity,
         toggleWishlist,
@@ -582,7 +588,8 @@ export const ShopContextProvider = (props) => {
         backendUrl,
         navigate,
         submitReview,
-        addToCart
+        addToCart,
+        getCartAmount
     }
 
     return (
