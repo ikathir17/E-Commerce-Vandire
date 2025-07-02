@@ -1,9 +1,8 @@
 /**
  * Extracts the public ID from a Cloudinary URL
- * @param {string} url - The Cloudinary URL
- * @returns {string} The public ID
+ * @private
  */
-export const getPublicIdFromUrl = (url) => {
+const getPublicIdFromUrl = (url) => {
   if (!url) return null;
   
   // Handle case where URL is already a public ID
@@ -14,12 +13,10 @@ export const getPublicIdFromUrl = (url) => {
   try {
     const urlObj = new URL(url);
     const pathParts = urlObj.pathname.split('/');
-    // Find the index of 'upload' in the path
     const uploadIndex = pathParts.findIndex(part => part === 'upload');
     if (uploadIndex === -1 || uploadIndex >= pathParts.length - 1) {
       return null;
     }
-    // The public ID is everything after 'upload/version/'
     return pathParts.slice(uploadIndex + 2).join('/').replace(/\.[^/.]+$/, '');
   } catch (e) {
     console.error('Error parsing Cloudinary URL:', e);

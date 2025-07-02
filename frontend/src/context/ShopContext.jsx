@@ -235,8 +235,28 @@ export const ShopContextProvider = (props) => {
         }
     }
 
+    // Load initial data
     useEffect(() => {
-        getProductsData()
+        // Load token from localStorage if exists
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            setToken(storedToken);
+        }
+        
+        // Load initial products
+        getProductsData();
+        
+        // Load wishlist from localStorage if exists
+        const storedWishlist = localStorage.getItem('wishlist');
+        if (storedWishlist) {
+            try {
+                const parsedWishlist = JSON.parse(storedWishlist);
+                setWishlist(parsedWishlist);
+            } catch (error) {
+                console.error('Error parsing wishlist from localStorage:', error);
+                localStorage.removeItem('wishlist');
+            }
+        }
     }, [])
 
     useEffect(() => {
@@ -332,17 +352,30 @@ export const ShopContextProvider = (props) => {
 
     const addToWishlist = async (productId) => {
         try {
-            const response = await axios.post(
-                `${backendUrl}/api/wishlist/add`,
-                { productId },
-                { 
-                    headers: { 
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    } 
+            // Update local state first for immediate UI update
+            const updatedWishlist = [...wishlist, productId];
+            setWishlist(updatedWishlist);
+            localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+            
+            // Then sync with backend if user is logged in
+            if (token) {
+                const response = await axios.post(
+                    `${backendUrl}/api/wishlist/add`,
+                    { productId },
+                    { 
+                        headers: { 
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        } 
+                    }
+                );
+                // Ensure local state matches backend
+                if (response.data.success) {
+                    setWishlist(response.data.wishlist || updatedWishlist);
+                    localStorage.setItem('wishlist', JSON.stringify(response.data.wishlist || updatedWishlist));
                 }
-            );
-            setWishlist(response.data.wishlist);
+            }
+            
             toast.success('Added to your wishlist');
         } catch (error) {
             console.error('Error adding to wishlist:', error);
@@ -360,17 +393,30 @@ export const ShopContextProvider = (props) => {
 
     const removeFromWishlist = async (productId) => {
         try {
-            const response = await axios.post(
-                `${backendUrl}/api/wishlist/remove`,
-                { productId },
-                { 
-                    headers: { 
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    } 
+            // Update local state first for immediate UI update
+            const updatedWishlist = wishlist.filter(id => id !== productId);
+            setWishlist(updatedWishlist);
+            localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+            
+            // Then sync with backend if user is logged in
+            if (token) {
+                const response = await axios.post(
+                    `${backendUrl}/api/wishlist/remove`,
+                    { productId },
+                    { 
+                        headers: { 
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        } 
+                    }
+                );
+                // Ensure local state matches backend
+                if (response.data.success) {
+                    setWishlist(response.data.wishlist || updatedWishlist);
+                    localStorage.setItem('wishlist', JSON.stringify(response.data.wishlist || updatedWishlist));
                 }
-            );
-            setWishlist(response.data.wishlist);
+            }
+            
             toast.success('Removed from your wishlist');
         } catch (error) {
             console.error('Error removing from wishlist:', error);
@@ -443,6 +489,7 @@ export const ShopContextProvider = (props) => {
                 localStorage.setItem('token', token);
                 localStorage.setItem('userId', userId);
                 setToken(token);
+                
                 // Fetch user's cart and wishlist
                 const [cartRes, wishlistRes] = await Promise.all([
                     axios.post(backendUrl + '/api/cart/get', {}, { headers: { token } }),
@@ -455,8 +502,31 @@ export const ShopContextProvider = (props) => {
                 if (cartRes.data.success) {
                     setCartItems(cartRes.data.cartData || {});
                 }
+                
+                let mergedWishlist = [];
+                const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+                
                 if (wishlistRes.data.success) {
-                    setWishlist(wishlistRes.data.wishlist || []);
+                    // Merge server wishlist with local wishlist, removing duplicates
+                    mergedWishlist = [...new Set([...localWishlist, ...(wishlistRes.data.wishlist || [])])];
+                    setWishlist(mergedWishlist);
+                    localStorage.setItem('wishlist', JSON.stringify(mergedWishlist));
+                    
+                    // Sync merged wishlist back to server
+                    await Promise.all(
+                        localWishlist
+                            .filter(id => !wishlistRes.data.wishlist?.includes(id))
+                            .map(id => 
+                                axios.post(
+                                    `${backendUrl}/api/wishlist/add`,
+                                    { productId: id },
+                                    { headers: { 'Authorization': `Bearer ${token}` } }
+                                )
+                            )
+                    );
+                } else {
+                    // If we can't get server wishlist, use local one
+                    setWishlist(localWishlist);
                 }
                 
                 return { success: true };
