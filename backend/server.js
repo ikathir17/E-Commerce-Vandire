@@ -19,9 +19,27 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
+// CORS Configuration
+const allowedOrigins = [
+  'https://yaazhi-ecommerce.netlify.app',
+  'http://localhost:5173' // Keep local development URL
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 // Add cache to app locals for use in routes
