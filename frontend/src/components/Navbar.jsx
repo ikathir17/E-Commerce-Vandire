@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { assets } from '../assets/assets';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
-import { FiUser, FiShoppingBag, FiMenu, FiX, FiChevronRight, FiHeart, FiChevronDown } from 'react-icons/fi';
+import { FiUser, FiShoppingBag, FiMenu, FiX, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -10,7 +10,7 @@ const Navbar = () => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
-    const { getCartCount, navigate, token, setToken, setCartItems, wishlist } = useContext(ShopContext);
+    const { getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
     const location = useLocation();
     
     const dropdownVariants = {
@@ -60,7 +60,7 @@ const Navbar = () => {
     };
 
     const handleLogout = () => {
-        navigate('/login');
+        navigate('/');
         localStorage.removeItem('token');
         setToken('');
         setCartItems({});
@@ -159,21 +159,25 @@ const Navbar = () => {
                     <div className="flex items-center space-x-4">
 
                         
+
+
+
+
                         <div className="relative">
                             <motion.button 
                                 onClick={toggleUserMenu}
-                                className="p-2 text-gray-700 hover:text-black transition-colors relative"
+                                className="p-2 text-gray-700 hover:text-indigo-600 transition-colors relative group"
                                 aria-label="User menu"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                <FiUser className="w-5 h-5" />
+                                <FiUser className="w-5 h-5 group-hover:rotate-6 transition-transform" />
                             </motion.button>
                             
                             <AnimatePresence>
                                 {isUserMenuOpen && token && (
                                     <motion.div 
-                                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+                                        className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl py-2 z-50 border border-gray-100"
                                         initial="hidden"
                                         animate="visible"
                                         exit="exit"
@@ -181,17 +185,19 @@ const Navbar = () => {
                                     >
                                         <Link
                                             to="/orders"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                                             onClick={() => setIsUserMenuOpen(false)}
                                         >
-                                            My Orders
+                                            <FiChevronRight className="mr-2 w-4 h-4 opacity-70" />
+                                            <span>My Orders</span>
                                         </Link>
                                         <div className="border-t border-gray-100 my-1"></div>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                            className="w-full flex items-center px-4 py-3 text-sm text-left text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
                                         >
-                                            Logout
+                                            <FiChevronRight className="mr-2 w-4 h-4 opacity-70" />
+                                            <span>Logout</span>
                                         </button>
                                     </motion.div>
                                 )}
@@ -201,42 +207,25 @@ const Navbar = () => {
                         <motion.div
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                        >
-                            <Link 
-                                to="/wishlist" 
-                                className="p-2 text-gray-700 hover:text-black transition-colors relative block"
-                                aria-label="Wishlist"
-                            >
-                                <FiHeart className="w-5 h-5" />
-                                {wishlist.length > 0 && (
-                                    <motion.span 
-                                        className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                    >
-                                        {wishlist.length}
-                                    </motion.span>
-                                )}
-                            </Link>
-                        </motion.div>
-
-                        <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
+                            className="relative"
                         >
                             <Link 
                                 to="/cart" 
-                                className="p-2 text-gray-700 hover:text-black transition-colors relative block"
+                                className="p-2 text-gray-700 hover:text-indigo-600 transition-colors relative block group"
                                 aria-label="Shopping cart"
                             >
-                                <FiShoppingBag className="w-5 h-5" />
+                                <FiShoppingBag className="w-5 h-5 group-hover:rotate-6 transition-transform" />
                                 {getCartCount() > 0 && (
                                     <motion.span 
-                                        className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                        className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0, opacity: 0 }}
+                                        transition={{ 
+                                            type: 'spring', 
+                                            stiffness: 500, 
+                                            damping: 30 
+                                        }}
                                     >
                                         {getCartCount()}
                                     </motion.span>
@@ -274,13 +263,13 @@ const Navbar = () => {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.15 }}
                         >
-                            {navLinks.map((link) => (
+                            {navLinks.map((link, index) => (
                                 <motion.div 
                                     key={link.to} 
                                     className="border-b border-gray-100"
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
-                                    transition={{ duration: 0.2 }}
+                                    transition={{ duration: 0.2, delay: index * 0.05 }}
                                 >
                                     <NavLink
                                         to={link.to}
@@ -295,54 +284,57 @@ const Navbar = () => {
                                     </NavLink>
                                 </motion.div>
                             ))}
-                            {!token ? (
-                                <motion.div 
-                                    className="border-b border-gray-100"
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ duration: 0.2, delay: 0.1 }}
-                                >
-                                    <Link
-                                        to="/login"
-                                        className="block px-3 py-3 text-base font-medium text-gray-600 hover:text-black"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Login / Register
-                                    </Link>
-                                </motion.div>
-                            ) : (
+                            {token ? (
                                 <>
                                     <motion.div 
                                         className="border-b border-gray-100"
                                         initial={{ x: -20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
-                                        transition={{ duration: 0.2, delay: 0.1 }}
+                                        transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
                                     >
                                         <Link
-                                            to="/account"
-                                            className="block px-3 py-3 text-base font-medium text-gray-600 hover:text-black"
+                                            to="/orders"
+                                            className="flex items-center px-6 py-4 text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            My Account
+                                            <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
+                                            <span>My Orders</span>
                                         </Link>
                                     </motion.div>
                                     <motion.div 
                                         className="border-b border-gray-100"
                                         initial={{ x: -20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
-                                        transition={{ duration: 0.2, delay: 0.15 }}
+                                        transition={{ duration: 0.2, delay: (navLinks.length + 1) * 0.05 }}
                                     >
                                         <button
                                             onClick={() => {
                                                 handleLogout();
                                                 setIsMobileMenuOpen(false);
                                             }}
-                                            className="block w-full text-left px-3 py-3 text-base font-medium text-gray-600 hover:text-black"
+                                            className="flex items-center w-full text-left px-6 py-4 text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
                                         >
-                                            Logout
+                                            <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
+                                            <span>Logout</span>
                                         </button>
                                     </motion.div>
                                 </>
+                            ) : (
+                                <motion.div 
+                                    className="border-b border-gray-100"
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
+                                >
+                                    <Link
+                                        to="/login"
+                                        className="flex items-center px-6 py-4 text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
+                                        <span>Login / Register</span>
+                                    </Link>
+                                </motion.div>
                             )}
                         </motion.div>
                     </motion.div>
