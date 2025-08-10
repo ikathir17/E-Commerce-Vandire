@@ -22,7 +22,8 @@ connectCloudinary();
 // CORS Configuration
 const allowedOrigins = [
   'https://yaazhi-ecommerce.netlify.app',
-  'http://localhost:5173' // Keep local development URL
+  'http://localhost:5173', // Frontend development URL
+  'http://localhost:5174'  // Admin panel development URL
 ];
 
 const corsOptions = {
