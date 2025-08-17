@@ -184,19 +184,39 @@ export const ShopContextProvider = (props) => {
 
     const getProductsData = async () => {
         try {
+            console.log('Attempting to fetch products from:', backendUrl + '/api/product/list');
+            const response = await axios.get(backendUrl + '/api/product/list', {
+                timeout: 30000 // 30-second timeout for slow Render cold starts
+            });
 
-            const response = await axios.get(backendUrl + '/api/product/list')
-            if (response.data.success) {
-                setProducts(response.data.products.reverse())
+            if (response.data && response.data.success) {
+                console.log('Successfully fetched products.');
+                setProducts(Array.isArray(response.data.products) ? response.data.products.reverse() : []);
             } else {
-                toast.error(response.data.message)
+                const errorMsg = response.data?.message || 'An unknown error occurred while fetching products.';
+                console.error('API Error:', errorMsg);
+                toast.error(errorMsg);
+                setProducts([]); // Clear products on failure
             }
-
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            console.error('Network or Server Error fetching products:', {
+                message: error.message,
+                isTimeout: error.code === 'ECONNABORTED',
+                response: error.response?.data,
+                config: {
+                    url: error.config?.url,
+                    method: error.config?.method
+                }
+            });
+
+            let toastMessage = 'Failed to connect to the server. Please try again later.';
+            if (error.code === 'ECONNABORTED') {
+                toastMessage = 'Server took too long to respond. Please refresh the page.';
+            }
+            toast.error(toastMessage);
+            setProducts([]); // Clear products on failure
         }
-    }
+    };
 
     const getUserCart = async ( token ) => {
         try {
