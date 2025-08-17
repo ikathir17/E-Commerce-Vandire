@@ -588,7 +588,6 @@ export const ShopContextProvider = (props) => {
         backendUrl,
         navigate,
         submitReview,
-        addToCart,
         getCartAmount
     }
 
