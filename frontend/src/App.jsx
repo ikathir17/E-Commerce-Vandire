@@ -34,7 +34,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow pt-20 px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] pb-12">
+            <main className="flex-grow pt-20 pb-12">
         <Outlet />
       </main>
       <Footer />
