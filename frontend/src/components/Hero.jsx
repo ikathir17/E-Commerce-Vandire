@@ -17,7 +17,7 @@ const Hero = () => {
       <div className='absolute inset-0 bg-black bg-opacity-40'></div>
       <div className='relative z-10 flex flex-col items-center justify-start h-full text-center text-white p-4 pt-40'>
         <h1 className='font-serif uppercase text-5xl tracking-widest font-bold sm:text-6xl md:text-7xl lg:text-8xl'>
-          Vendire
+          VANDIRE
         </h1>
       </div>
     </div>
