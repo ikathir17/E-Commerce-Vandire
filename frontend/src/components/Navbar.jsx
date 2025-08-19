@@ -79,34 +79,22 @@ const Navbar = () => {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className={`fixed w-full z-50 transition-all duration-300 ${
-                scrolled 
-                    ? 'bg-white shadow-md py-2' 
-                    : 'bg-white/90 backdrop-blur-sm py-4'
-            }`}
+            className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2 text-gray-800' : 'bg-transparent py-4 text-white'}`} 
         >
             <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center">
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center">
-                        <motion.img 
-                            src={assets.logo} 
-                            alt="Yaazhi Logo" 
-                            className="h-10 md:h-12"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        />
-                    </Link>
+                <div className="flex justify-end items-center">
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center space-x-8">
+                    <div className="hidden md:flex items-center space-x-8 mr-4">
                         {navLinks.map((link) => (
                             <div key={link.to} className="relative group">
                                 <NavLink
                                     to={link.to}
                                     className={({ isActive: isNavActive }) =>
                                         `relative px-2 py-1 text-sm font-medium transition-colors duration-200 ${
-                                            isNavActive ? 'text-black' : 'text-gray-600 hover:text-black'
+                                            isNavActive
+                                            ? (scrolled ? 'text-black' : 'text-white')
+                                            : (scrolled ? 'text-gray-600 hover:text-black' : 'text-gray-200 hover:text-white')
                                         }`
                                     }
                                     onMouseEnter={() => link.subLinks && setActiveDropdown(link.to)}
@@ -166,7 +154,7 @@ const Navbar = () => {
                         <div className="relative">
                             <motion.button 
                                 onClick={toggleUserMenu}
-                                className="p-2 text-gray-700 hover:text-indigo-600 transition-colors relative group"
+                                className={`p-2 transition-colors relative group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : 'text-white hover:text-gray-200'}`}
                                 aria-label="User menu"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
@@ -211,7 +199,7 @@ const Navbar = () => {
                         >
                             <Link 
                                 to="/cart" 
-                                className="p-2 text-gray-700 hover:text-indigo-600 transition-colors relative block group"
+                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : 'text-white hover:text-gray-200'}`}
                                 aria-label="Shopping cart"
                             >
                                 <FiShoppingBag className="w-5 h-5 group-hover:rotate-6 transition-transform" />
@@ -236,7 +224,7 @@ const Navbar = () => {
                         {/* Mobile menu button */}
                         <motion.button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="md:hidden p-2 text-gray-700 hover:text-black transition-colors"
+                            className={`md:hidden p-2 transition-colors ${scrolled ? 'text-gray-700 hover:text-black' : 'text-white hover:text-gray-200'}`}
                             aria-label="Toggle menu"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}

@@ -31,10 +31,13 @@ const ScrollToTop = () => {
 
 // Layout component with Navbar and Footer
 const Layout = () => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-            <main className="flex-grow pt-20 pb-12">
+      <main className={`flex-grow pb-12 ${!isHomePage ? 'pt-20' : ''}`}>
         <Outlet />
       </main>
       <Footer />
