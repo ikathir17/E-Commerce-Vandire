@@ -10,8 +10,10 @@ const Navbar = () => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
+    const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
     const { getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
     const location = useLocation();
+    const isHomePage = location.pathname === '/'; // Check if current route is home page
     
     const dropdownVariants = {
         hidden: { opacity: 0, y: -10 },
@@ -79,72 +81,108 @@ const Navbar = () => {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2 text-gray-800' : 'bg-transparent py-4 text-white'}`} 
+            className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'}`}
         >
-            <div className="container mx-auto px-4">
-                <div className="flex justify-end items-center">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center">
 
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center space-x-8 mr-4">
-                        {navLinks.map((link) => (
-                            <div key={link.to} className="relative group">
-                                <NavLink
-                                    to={link.to}
-                                    className={({ isActive: isNavActive }) =>
-                                        `relative px-2 py-1 text-sm font-medium transition-colors duration-200 ${
-                                            isNavActive
-                                            ? (scrolled ? 'text-black' : 'text-white')
-                                            : (scrolled ? 'text-gray-600 hover:text-black' : 'text-gray-200 hover:text-white')
-                                        }`
-                                    }
-                                    onMouseEnter={() => link.subLinks && setActiveDropdown(link.to)}
-                                    onMouseLeave={() => link.subLinks && setActiveDropdown(null)}
+                    {/* Left side: Logo and Desktop Nav Dropdown */}
+                    <div className="flex items-center space-x-4">
+                        {/* Nav Dropdown */}
+                        <AnimatePresence>
+                            {scrolled && (
+                                <motion.div
+                                    className="relative hidden md:block"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3 }}
                                 >
-                                    {({ isActive }) => (
-                                        <>
-                                            {link.label}
-                                            {link.subLinks && (
-                                                <FiChevronDown className="inline-block ml-1 w-3 h-3 transition-transform duration-200 group-hover:rotate-180" />
-                                            )}
-                                            <span className={`absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-300 ${
-                                                isActive ? 'w-full' : 'group-hover:w-full'
-                                            }`}></span>
-                                        </>
-                                    )}
-                                </NavLink>
-
-                                {link.subLinks && (
+                                    <button
+                                        onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
+                                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                    >
+                                        <FiMenu className="w-5 h-5 text-gray-800" />
+                                    </button>
                                     <AnimatePresence>
-                                        {activeDropdown === link.to && (
+                                        {isNavMenuOpen && (
                                             <motion.div
                                                 initial="hidden"
                                                 animate="visible"
                                                 exit="exit"
                                                 variants={dropdownVariants}
-                                                className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
-                                                onMouseEnter={() => setActiveDropdown(link.to)}
-                                                onMouseLeave={() => setActiveDropdown(null)}
+                                                className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border border-gray-100"
+                                                onMouseLeave={() => setIsNavMenuOpen(false)}
                                             >
-                                                {link.subLinks.map((sublink) => (
-                                                    <Link
-                                                        key={sublink.to}
-                                                        to={sublink.to}
-                                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                                        onClick={() => setActiveDropdown(null)}
+                                                {navLinks.map((link) => (
+                                                    <NavLink
+                                                        key={link.to}
+                                                        to={link.to}
+                                                        className={({ isActive }) =>
+                                                            `block px-4 py-2 text-sm ${isActive ? 'text-indigo-600 bg-indigo-50' : isHomePage && !scrolled ? 'text-white hover:bg-white/10' : 'text-gray-700 hover:bg-gray-50'}`
+                                                        }
+                                                        onClick={() => setIsNavMenuOpen(false)}
                                                     >
-                                                        {sublink.label}
-                                                    </Link>
+                                                        {link.label}
+                                                    </NavLink>
                                                 ))}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
-                                )}
-                            </div>
-                        ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Vandire Logo */}
+                        <AnimatePresence>
+                            {scrolled && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                >
+                                    <Link to="/" className={`font-goudy uppercase text-2xl tracking-extra-widest font-bold ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'}`}>
+                                        VANDIRE
+                                    </Link>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Icons */}
-                    <div className="flex items-center space-x-4">
+                    {/* Right side: Nav links and Icons */}
+                    <div className="flex items-center space-x-6">
+                        {/* Original Desktop Navigation (hidden on scroll) */}
+                        <AnimatePresence>
+                            {!scrolled && (
+                                <motion.div 
+                                    className="hidden md:flex items-center space-x-8"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {navLinks.map((link) => (
+                                        <NavLink
+                                            key={link.to}
+                                            to={link.to}
+                                            className={({ isActive }) =>
+                                                `relative px-2 py-1 text-sm font-medium transition-colors duration-200 group ${isActive ? 'text-white' : isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-500 hover:text-black'}`
+                                            }
+                                        >
+                                            {({ isActive }) => (
+                                                <>
+                                                    {link.label}
+                                                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 ${isHomePage && !scrolled ? 'bg-white' : 'bg-black'} transition-all duration-300 ${isActive ? 'w-full' : 'group-hover:w-full'}`}></span>
+                                                </>
+                                            )}
+                                        </NavLink>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Icons */}
 
                         
 
@@ -154,7 +192,7 @@ const Navbar = () => {
                         <div className="relative">
                             <motion.button 
                                 onClick={toggleUserMenu}
-                                className={`p-2 transition-colors relative group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : 'text-white hover:text-gray-200'}`}
+                                className={`p-2 transition-colors relative group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
                                 aria-label="User menu"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
@@ -199,7 +237,7 @@ const Navbar = () => {
                         >
                             <Link 
                                 to="/cart" 
-                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : 'text-white hover:text-gray-200'}`}
+                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
                                 aria-label="Shopping cart"
                             >
                                 <FiShoppingBag className="w-5 h-5 group-hover:rotate-6 transition-transform" />
@@ -224,7 +262,7 @@ const Navbar = () => {
                         {/* Mobile menu button */}
                         <motion.button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className={`md:hidden p-2 transition-colors ${scrolled ? 'text-gray-700 hover:text-black' : 'text-white hover:text-gray-200'}`}
+                            className={`md:hidden p-2 transition-colors ${scrolled ? 'text-gray-700 hover:text-black' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
                             aria-label="Toggle menu"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}

@@ -16,12 +16,12 @@ const connectDB = async () => {
 
         await mongoose.connect(process.env.MONGODB_URI, {
             dbName: 'e-commerce',
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 30000, // 30 seconds timeout
         });
         
         console.log('🔌 Connected to MongoDB database');
     } catch (error) {
-        console.error('❌ Failed to connect to MongoDB:', error.message);
+        console.error('❌ Failed to connect to MongoDB:', error);
         console.error('Connection string used:', process.env.MONGODB_URI ? '*****' : 'Not provided');
         process.exit(1);
     }
