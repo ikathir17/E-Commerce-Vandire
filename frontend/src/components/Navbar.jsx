@@ -133,20 +133,18 @@ const Navbar = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* Vandire Logo */}
+                        {/* Vandire Brand - visible before and after scrolling */}
                         <AnimatePresence>
-                            {scrolled && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.3, delay: 0.1 }}
-                                >
-                                    <Link to="/" className={`font-goudy uppercase text-2xl tracking-extra-widest font-bold ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'}`}>
-                                        VANDIRE
-                                    </Link>
-                                </motion.div>
-                            )}
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3, delay: 0.05 }}
+                            >
+                                <Link to="/" className={`uppercase text-2xl tracking-extra-widest font-bold ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'}`} style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, Cambria, Times New Roman, Times, serif', letterSpacing: '0.18em' }}>
+                                    VANDIRE
+                                </Link>
+                            </motion.div>
                         </AnimatePresence>
                     </div>
 
