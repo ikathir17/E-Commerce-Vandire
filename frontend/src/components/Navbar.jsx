@@ -16,23 +16,45 @@ const Navbar = () => {
     const isHomePage = location.pathname === '/'; // Check if current route is home page
     
     const dropdownVariants = {
-        hidden: { opacity: 0, y: -10 },
+        hidden: { 
+            opacity: 0, 
+            y: -10,
+            scale: 0.98
+        },
         visible: { 
             opacity: 1, 
             y: 0,
+            scale: 1,
             transition: { 
                 duration: 0.2,
-                ease: 'easeOut'
+                ease: [0.4, 0, 0.2, 1],
+                when: "beforeChildren",
+                staggerChildren: 0.05
             } 
         },
         exit: { 
             opacity: 0, 
-            y: -10,
+            y: -5,
+            scale: 0.98,
             transition: { 
                 duration: 0.15,
-                ease: 'easeIn'
+                ease: [0.4, 0, 1, 1]
             } 
         }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -5 },
+        visible: { 
+            opacity: 1, 
+            x: 0,
+            transition: { 
+                type: 'spring',
+                stiffness: 300,
+                damping: 24
+            }
+        },
+        exit: { opacity: 0, x: -5 }
     };
 
     // Close mobile menu when route changes
@@ -100,9 +122,13 @@ const Navbar = () => {
                                 >
                                     <button
                                         onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
-                                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                        className={`p-2 rounded-full transition-all duration-200 ${isNavMenuOpen 
+                                            ? 'bg-gray-100 transform rotate-90' 
+                                            : 'hover:bg-gray-100'}`}
+                                        aria-label="Toggle navigation menu"
+                                        aria-expanded={isNavMenuOpen}
                                     >
-                                        <FiMenu className="w-5 h-5 text-gray-800" />
+                                        <FiMenu className={`w-5 h-5 ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'} transition-transform duration-200 ${isNavMenuOpen ? 'opacity-75' : ''}`} />
                                     </button>
                                     <AnimatePresence>
                                         {isNavMenuOpen && (
@@ -111,20 +137,35 @@ const Navbar = () => {
                                                 animate="visible"
                                                 exit="exit"
                                                 variants={dropdownVariants}
-                                                className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border border-gray-100"
+                                                className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100 backdrop-blur-sm bg-white/95"
                                                 onMouseLeave={() => setIsNavMenuOpen(false)}
                                             >
-                                                {navLinks.map((link) => (
+                                                {navLinks.map((link, index) => (
+                                                    <motion.div
+                                                        key={link.to}
+                                                        variants={itemVariants}
+                                                        initial="hidden"
+                                                        animate="visible"
+                                                        exit="exit"
+                                                    >
                                                     <NavLink
                                                         key={link.to}
                                                         to={link.to}
                                                         className={({ isActive }) =>
-                                                            `block px-4 py-2 text-sm ${isActive ? 'text-indigo-600 bg-indigo-50' : isHomePage && !scrolled ? 'text-white hover:bg-white/10' : 'text-gray-700 hover:bg-gray-50'}`
+                                                            `block px-5 py-2.5 text-sm font-medium transition-all duration-200 ${isActive 
+                                                                ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-500 pl-4' 
+                                                                : isHomePage && !scrolled 
+                                                                    ? 'text-white hover:bg-white/10 hover:pl-5' 
+                                                                    : 'text-gray-700 hover:bg-gray-50 hover:pl-5 hover:text-gray-900'}`
                                                         }
                                                         onClick={() => setIsNavMenuOpen(false)}
                                                     >
-                                                        {link.label}
-                                                    </NavLink>
+                                                            <div className="flex items-center">
+                                                                <span className="flex-1">{link.label}</span>
+                                                                <FiChevronRight className="w-3.5 h-3.5 opacity-50" />
+                                                            </div>
+                                                        </NavLink>
+                                                    </motion.div>
                                                 ))}
                                             </motion.div>
                                         )}
@@ -188,39 +229,66 @@ const Navbar = () => {
                         <div className="relative">
                             <motion.button 
                                 onClick={toggleUserMenu}
-                                className={`p-2 transition-colors relative group ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-indigo-600'}`}
+                                className={`p-2 transition-all duration-200 relative group ${isUserMenuOpen 
+                                    ? 'bg-gray-100 rounded-full' 
+                                    : ''} ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-indigo-600'}`}
                                 aria-label="User menu"
+                                aria-expanded={isUserMenuOpen}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                             >
-                                <FiUser className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                                <FiUser className={`w-5 h-5 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-6 opacity-75' : 'group-hover:rotate-6'}`} />
                             </motion.button>
                             
                             <AnimatePresence>
                                 {isUserMenuOpen && token && (
                                     <motion.div 
-                                        className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl py-2 z-50 border border-gray-100"
+                                        className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100 backdrop-blur-sm bg-white/95"
                                         initial="hidden"
                                         animate="visible"
                                         exit="exit"
                                         variants={dropdownVariants}
+                                        onMouseLeave={() => setIsUserMenuOpen(false)}
                                     >
-                                        <Link
-                                            to="/orders"
-                                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                            onClick={() => setIsUserMenuOpen(false)}
-                                        >
-                                            <FiChevronRight className="mr-2 w-4 h-4 opacity-70" />
-                                            <span>My Orders</span>
-                                        </Link>
+                                        <motion.div variants={itemVariants}>
+                                            <Link
+                                                to="/profile"
+                                                className="block px-5 py-2.5 text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:pl-5 hover:text-gray-900"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, serif' }}
+                                            >
+                                                <div className="flex items-center">
+                                                    <span className="flex-1 uppercase tracking-wider text-sm">MY PROFILE</span>
+                                                    <FiChevronRight className="w-3.5 h-3.5 opacity-50" />
+                                                </div>
+                                            </Link>
+                                        </motion.div>
+                                        <motion.div variants={itemVariants}>
+                                            <Link
+                                                to="/orders"
+                                                className="block px-5 py-2.5 text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:pl-5 hover:text-gray-900"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, serif' }}
+                                            >
+                                                <div className="flex items-center">
+                                                    <span className="flex-1 uppercase tracking-wider text-sm">MY ORDERS</span>
+                                                    <FiChevronRight className="w-3.5 h-3.5 opacity-50" />
+                                                </div>
+                                            </Link>
+                                        </motion.div>
                                         <div className="border-t border-gray-100 my-1"></div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center px-4 py-3 text-sm text-left text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                        >
-                                            <FiChevronRight className="mr-2 w-4 h-4 opacity-70" />
-                                            <span>Logout</span>
-                                        </button>
+                                        <motion.div variants={itemVariants}>
+                                            <button
+                                                onClick={handleLogout}
+                                                style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, serif' }}
+                                            className="w-full text-left block px-5 py-2.5 text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 hover:pl-5 hover:text-red-700"
+                                            >
+                                                <div className="flex items-center">
+                                                    <span className="flex-1 uppercase tracking-wider text-sm">LOGOUT</span>
+                                                    <FiChevronRight className="w-3.5 h-3.5 opacity-50" />
+                                                </div>
+                                            </button>
+                                        </motion.div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
