@@ -1,4 +1,4 @@
-# E-Commerce-Yaazhi
+# E-Commerce-Vandire
 
 **Yaazhi** is a fashion brand e-commerce platform designed with the **MERN stack** (MongoDB, Express.js, React, Node.js). The platform includes a **user frontend** for browsing and shopping fashion products, along with a comprehensive **admin panel** for managing inventory, processing orders, and handling customer data. Integrated with **Razorpay** for secure payment transactions, **Yaazhi** ensures a smooth and secure checkout experience. Additionally, **Framer Motion** is utilized to provide rich, interactive animations for a modern, dynamic user experience.
 
