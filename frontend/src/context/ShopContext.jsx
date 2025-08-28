@@ -575,8 +575,41 @@ export const ShopContextProvider = (props) => {
         setWishlist([]);
     }
 
+    const contextValue = {
+        products,
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        getTotalCartAmount,
+        search,
+        setSearch,
+        showSearch,
+        setShowSearch,
+        clearCart,
+        checkout,
+        token,
+        setToken,
+        login,
+        userEmail,
+        logout,
+        getProductQuantity,
+        toggleWishlist,
+        isInWishlist,
+        wishlist,
+        isWishlistLoading,
+        isProductsLoading,
+        backendUrl,
+        navigate,
+        submitReview,
+        getCartAmount,
+        getCartCount,
+        currency,
+        delivery_fee
+    };
+
     return (
-        <ShopContext.Provider value={value}>
+        <ShopContext.Provider value={contextValue}>
             {props.children}
         </ShopContext.Provider>
     )
