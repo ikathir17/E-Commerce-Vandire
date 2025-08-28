@@ -25,8 +25,8 @@ const Navbar = ({ setToken, setSidebarOpen }) => {
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo and Admin Panel Badge */}
           <div className="flex-shrink-0 flex items-center space-x-2">
-            <img src={logo} alt="Logo" className="h-8 w-auto" />
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+            <span className="text-xl font-bold text-gray-900">VANDIRE</span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 ml-2">
               Admin Panel
             </span>
           </div>
