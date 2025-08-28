@@ -81,7 +81,7 @@ const Navbar = () => {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'}`}
+            className={`fixed w-full z-50 transition-all duration-300 ${isHomePage && !scrolled ? 'bg-transparent shadow-none py-4' : 'bg-white shadow-md py-2'}`}
         >
             <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
@@ -133,24 +133,22 @@ const Navbar = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* Vandire Brand - visible before and after scrolling */}
-                        <AnimatePresence>
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3, delay: 0.05 }}
-                            >
-                                <Link to="/" className={`uppercase text-2xl tracking-extra-widest font-bold ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'}`} style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, Cambria, Times New Roman, Times, serif', letterSpacing: '0.18em' }}>
-                                    VANDIRE
-                                </Link>
-                            </motion.div>
-                        </AnimatePresence>
+                        {/* Vandire Brand - always visible */}
+                        <Link 
+                            to="/" 
+                            className={`uppercase text-2xl tracking-extra-widest font-bold ${isHomePage && !scrolled ? 'text-white' : 'text-gray-800'}`} 
+                            style={{ 
+                                fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, Cambria, Times New Roman, Times, serif', 
+                                letterSpacing: '0.18em' 
+                            }}
+                        >
+                            VANDIRE
+                        </Link>
                     </div>
 
                     {/* Right side: Nav links and Icons */}
                     <div className="flex items-center space-x-6">
-                        {/* Original Desktop Navigation (hidden on scroll) */}
+                        {/* Desktop Navigation - only visible when not scrolled */}
                         <AnimatePresence>
                             {!scrolled && (
                                 <motion.div 
@@ -165,13 +163,13 @@ const Navbar = () => {
                                             key={link.to}
                                             to={link.to}
                                             className={({ isActive }) =>
-                                                `relative px-2 py-1 text-sm font-medium transition-colors duration-200 group ${isActive ? 'text-white' : isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-500 hover:text-black'}`
+                                                `relative px-2 py-1 text-sm font-medium transition-colors duration-200 group ${isActive ? (isHomePage ? 'text-white' : 'text-indigo-600') : (isHomePage ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-indigo-600')}`
                                             }
-                                        >
-                                            {({ isActive }) => (
-                                                <>
-                                                    {link.label}
-                                                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 ${isHomePage && !scrolled ? 'bg-white' : 'bg-black'} transition-all duration-300 ${isActive ? 'w-full' : 'group-hover:w-full'}`}></span>
+                                >
+                                    {({ isActive }) => (
+                                        <>
+                                            {link.label}
+                                                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 ${isHomePage ? 'bg-white' : 'bg-indigo-600'} transition-all duration-300 ${isActive ? 'w-full' : 'group-hover:w-full'}`}></span>
                                                 </>
                                             )}
                                         </NavLink>
@@ -190,7 +188,7 @@ const Navbar = () => {
                         <div className="relative">
                             <motion.button 
                                 onClick={toggleUserMenu}
-                                className={`p-2 transition-colors relative group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
+                                className={`p-2 transition-colors relative group ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-indigo-600'}`}
                                 aria-label="User menu"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
@@ -236,7 +234,7 @@ const Navbar = () => {
                         >
                             <Link 
                                 to="/wishlist" 
-                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-pink-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
+                                className={`p-2 transition-colors relative block group ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-pink-600'}`}
                                 aria-label="Wishlist"
                             >
                                 <FiHeart className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -266,7 +264,7 @@ const Navbar = () => {
                         >
                             <Link 
                                 to="/cart" 
-                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-indigo-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
+                                className={`p-2 transition-colors relative block group ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-indigo-600'}`}
                                 aria-label="Shopping cart"
                             >
                                 <FiShoppingBag className="w-5 h-5 group-hover:rotate-6 transition-transform" />
@@ -291,7 +289,7 @@ const Navbar = () => {
                         {/* Mobile menu button */}
                         <motion.button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className={`md:hidden p-2 transition-colors ${scrolled ? 'text-gray-700 hover:text-black' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
+                            className={`md:hidden p-2 transition-colors ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-black'}`}
                             aria-label="Toggle menu"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
