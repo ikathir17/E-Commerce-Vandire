@@ -18,6 +18,7 @@ export const ShopContextProvider = (props) => {
     const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail') || '');
     const [wishlist, setWishlist] = useState([]);
     const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+    const [isProductsLoading, setIsProductsLoading] = useState(true);
     const navigate = useNavigate();
 
 
@@ -183,18 +184,16 @@ export const ShopContextProvider = (props) => {
     }
 
     const getProductsData = async () => {
+        setIsProductsLoading(true);
         try {
-            console.log('Attempting to fetch products from:', backendUrl + '/api/product/list');
             const response = await axios.get(backendUrl + '/api/product/list', {
                 timeout: 30000 // 30-second timeout for slow Render cold starts
             });
 
             if (response.data && response.data.success) {
-                console.log('Successfully fetched products.');
                 setProducts(Array.isArray(response.data.products) ? response.data.products.reverse() : []);
             } else {
                 const errorMsg = response.data?.message || 'An unknown error occurred while fetching products.';
-                console.error('API Error:', errorMsg);
                 toast.error(errorMsg);
                 setProducts([]); // Clear products on failure
             }
@@ -215,6 +214,8 @@ export const ShopContextProvider = (props) => {
             }
             toast.error(toastMessage);
             setProducts([]); // Clear products on failure
+        } finally {
+            setIsProductsLoading(false);
         }
     };
 
@@ -572,22 +573,6 @@ export const ShopContextProvider = (props) => {
         setUserEmail('');
         setCartItems({});
         setWishlist([]);
-        navigate('/');
-    };
-
-
-
-    const value = {
-        products,
-        currency,
-        delivery_fee,
-        cartItems,
-        addToCart,
-        setCartItems,
-        getCartCount,
-        updateQuantity,
-        removeFromCart,
-        getTotalCartItems,
         getTotalCartAmount,
         search,
         setSearch,
