@@ -1,5 +1,4 @@
 // Import existing assets
-import logo from './logo.png';
 import herosecvid from './herosecvid.mp4';
 import contact_img from './contact_img.png';
 import bin_icon from './bin_icon.png';
@@ -12,7 +11,6 @@ import razorpay_logo from './razorpay_logo.png';
 
 // Export assets
 export const assets = {
-    logo,
     herosecvid,
     contact_img,
     dropdown_icon,

@@ -16,7 +16,7 @@ const Footer = () => {
 
   const contactInfo = [
     { icon: <FiPhone className="w-4 h-4" />, text: '+1-212-456-7890' },
-    { icon: <FiMail className="w-4 h-4" />, text: 'contact@yaazhi.com' },
+    { icon: <FiMail className="w-4 h-4" />, text: 'contact@vandire.com' },
   ];
 
   const socialLinks = [
@@ -33,10 +33,10 @@ const Footer = () => {
           {/* Brand Info */}
           <div className="space-y-6">
             <Link to="/" className="inline-block">
-              <img src={assets.logo} className="h-10" alt="Yaazhi Logo" />
+              <span className="uppercase text-2xl tracking-extra-widest font-bold text-gray-800" style={{ fontFamily: 'Cinzel, Playfair Display, ui-serif, Georgia, Cambria, Times New Roman, Times, serif', letterSpacing: '0.18em' }}>VANDIRE</span>
             </Link>
             <p className="text-gray-600 leading-relaxed">
-              Yaazhi is your trusted destination for quality products and seamless shopping. 
+              Vandire is your trusted destination for quality products and seamless shopping. 
               We are committed to delivering the best online experience with secure payments 
               and fast delivery.
             </p>
@@ -111,7 +111,7 @@ const Footer = () => {
         <div className="border-t border-gray-200 mt-16 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-500">
-              &copy; {currentYear} Yaazhi. All rights reserved.
+              &copy; {currentYear} Vandire. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Privacy Policy</a>

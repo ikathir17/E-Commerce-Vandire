@@ -25,7 +25,7 @@
 
 ### **Payment Integration:**
 
-* **Razorpay Integration**: **Yaazhi** supports secure payment processing via **Razorpay**, allowing customers to pay using credit/debit cards, net banking, and wallets. Razorpay handles the entire payment flow securely with order confirmation and payment status updates.
+* **Razorpay Integration**: **Vandire** supports secure payment processing via **Razorpay**, allowing customers to pay using credit/debit cards, net banking, and wallets. Razorpay handles the entire payment flow securely with order confirmation and payment status updates.
 
 ### **Responsive Design:**
 

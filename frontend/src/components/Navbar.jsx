@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { assets } from '../assets/assets';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
-import { FiUser, FiShoppingBag, FiMenu, FiX, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { FiUser, FiShoppingBag, FiMenu, FiX, FiChevronRight, FiChevronDown, FiHeart } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -11,7 +11,7 @@ const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
-    const { getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
+    const { getCartCount, navigate, token, setToken, setCartItems, wishlist } = useContext(ShopContext);
     const location = useLocation();
     const isHomePage = location.pathname === '/'; // Check if current route is home page
     
@@ -228,6 +228,37 @@ const Navbar = () => {
                             </AnimatePresence>
                         </div>
 
+                        {/* Wishlist */}
+                        <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative"
+                        >
+                            <Link 
+                                to="/wishlist" 
+                                className={`p-2 transition-colors relative block group ${scrolled ? 'text-gray-700 hover:text-pink-600' : isHomePage ? 'text-white hover:text-gray-200' : 'text-black hover:text-gray-700'}`}
+                                aria-label="Wishlist"
+                            >
+                                <FiHeart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                {wishlist && wishlist.length > 0 && (
+                                    <motion.span 
+                                        className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0, opacity: 0 }}
+                                        transition={{ 
+                                            type: 'spring', 
+                                            stiffness: 500, 
+                                            damping: 30 
+                                        }}
+                                    >
+                                        {wishlist.length}
+                                    </motion.span>
+                                )}
+                            </Link>
+                        </motion.div>
+
+                        {/* Cart */}
                         <motion.div
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
