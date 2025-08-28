@@ -573,27 +573,6 @@ export const ShopContextProvider = (props) => {
         setUserEmail('');
         setCartItems({});
         setWishlist([]);
-        getTotalCartAmount,
-        search,
-        setSearch,
-        showSearch,
-        setShowSearch,
-        clearCart,
-        checkout,
-        token,
-        setToken,
-        login,
-        userEmail,
-        logout,
-        getProductQuantity,
-        toggleWishlist,
-        isInWishlist,
-        wishlist,
-        isWishlistLoading,
-        backendUrl,
-        navigate,
-        submitReview,
-        getCartAmount
     }
 
     return (
