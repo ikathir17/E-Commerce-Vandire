@@ -20,19 +20,41 @@ export const verifyToken = (req, res, next) => {
 };
 
 const authUser = async (req, res, next) => {
-    const { token } = req.headers;
-
-    if (!token) {
-        return res.json({ success: false, message: 'Not Authorized Login Again' });
-    }
-
     try {
-        const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-        req.body.userId = token_decode.id;
+        // Check for token in Authorization header (Bearer) or directly in headers
+        let token;
+        const authHeader = req.headers.authorization;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            // Handle Bearer token format: 'Bearer <token>'
+            token = authHeader.split(' ')[1];
+        } else if (req.headers.token) {
+            // Handle direct token in headers
+            token = req.headers.token;
+        }
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'No authentication token provided' });
+        }
+
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (!decoded || !decoded.id) {
+            return res.status(401).json({ success: false, message: 'Invalid token' });
+        }
+
+        // Attach user ID to request
+        req.user = { id: decoded.id };
+        req.body.userId = decoded.id; // For backward compatibility
+        
         next();
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        console.error('Authentication error:', error);
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, message: 'Token expired' });
+        }
+        return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 };
 

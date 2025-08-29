@@ -25,36 +25,42 @@ export const ShopContextProvider = (props) => {
     const toast = useToast();
 
     const addToCart = async (itemId, size) => {
+        if (!token) {
+            toast.error('Please login to add items to cart');
+            navigate('/login');
+            return;
+        }
+
         if (!size) {
             toast.error('Please select a size');
             return;
         }
 
         try {
-            // Update local cart state
-            let cartData = structuredClone(cartItems);
-            if (cartData[itemId]) {
-                if (cartData[itemId][size]) {
-                    cartData[itemId][size] += 1;
-                } else {
-                    cartData[itemId][size] = 1;
+            // First update in the backend
+            const response = await axios.post(
+                `${backendUrl}/api/cart/update`,
+                { 
+                    itemId, 
+                    size, 
+                    quantity: (cartItems[itemId]?.[size] || 0) + 1 
+                },
+                { 
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
+            );
+
+            // If backend update is successful, update local state
+            if (response.data?.success) {
+                const updatedCart = response.data.cartData || {};
+                setCartItems(updatedCart);
+                toast.success('Item added to cart!');
             } else {
-                cartData[itemId] = {};
-                cartData[itemId][size] = 1;
+                throw new Error('Failed to update cart');
             }
-            setCartItems(cartData);
-
-            // If user is logged in, update cart in the backend
-            if (token) {
-                await axios.post(
-                    `${backendUrl}/api/cart/update`,
-                    { productId: itemId, size, quantity: cartData[itemId][size] },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-            }
-
-            toast.success('Item added to cart!');
 
         } catch (error) {
             console.error('Error updating cart:', error);
@@ -112,10 +118,10 @@ export const ShopContextProvider = (props) => {
         // Ensure quantity is a valid number
         const quantity = newQuantity === '' || isNaN(parseInt(newQuantity, 10)) ? 0 : parseInt(newQuantity, 10);
         
-        // Create a copy of the current cart
-        const updatedCart = { ...cartItems };
-        
         try {
+            // Create a fresh copy of the current cart
+            const updatedCart = JSON.parse(JSON.stringify(cartItems));
+            
             // If quantity is 0 or less, remove the item
             if (quantity <= 0) {
                 if (updatedCart[itemId]) {
@@ -157,7 +163,7 @@ export const ShopContextProvider = (props) => {
         } catch (error) {
             console.error('Error updating cart:', error);
             // Revert to previous cart state on error
-            setCartItems({...cartItems});
+            setCartItems(prevCart => ({...prevCart}));
             toast.error(error.response?.data?.message || 'Failed to update cart');
             return false;
         }
@@ -286,7 +292,16 @@ export const ShopContextProvider = (props) => {
             if (token) {
                 try {
                     // Fetch cart data
-                    const cartRes = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token } });
+                    const cartRes = await axios.post(
+                        `${backendUrl}/api/cart/get`, 
+                        { userId: localStorage.getItem('userId') }, 
+                        { 
+                            headers: { 
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            } 
+                        }
+                    );
                     if (cartRes.data.success) {
                         setCartItems(cartRes.data.cartData || {});
                     }
@@ -295,7 +310,10 @@ export const ShopContextProvider = (props) => {
                     const userId = localStorage.getItem('userId');
                     if (userId) {
                         const wishlistRes = await axios.get(`${backendUrl}/api/wishlist/${userId}`, { 
-                            headers: { token } 
+                            headers: { 
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            } 
                         });
                         if (wishlistRes.data.success) {
                             setWishlist(wishlistRes.data.wishlist || []);

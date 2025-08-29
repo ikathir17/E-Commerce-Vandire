@@ -100,4 +100,78 @@ const adminLogin = async (req, res) => {
 }
 
 
-export { loginUser, registerUser, adminLogin }
+// Get current user profile
+const getCurrentUser = async (req, res) => {
+    try {
+        const user = await userModel
+            .findById(req.user.id)
+            .select('-password -__v')
+            .lean();
+            
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+        
+        // Ensure all required fields exist
+        const userData = {
+            _id: user._id,
+            name: user.name || '',
+            email: user.email || '',
+            orders: user.orders || [],
+            wishlist: user.wishlist || [],
+            cartData: user.cartData || {},
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        
+        res.json({ 
+            success: true, 
+            user: userData 
+        });
+        
+    } catch (error) {
+        console.error('Error in getCurrentUser:', {
+            error: error.message,
+            stack: error.stack,
+            userId: req.user?.id
+        });
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching user profile',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Update user name
+const updateName = async (req, res) => {
+    try {
+        const { name } = req.body;
+        const userId = req.user.id; // Set by authUser middleware
+
+        if (!name || name.trim().length < 2) {
+            return res.status(400).json({ success: false, message: 'Name must be at least 2 characters long' });
+        }
+
+        const user = await userModel.findByIdAndUpdate(
+            userId,
+            { name: name.trim() },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error('Error updating user name:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+export { loginUser, registerUser, adminLogin, getCurrentUser, updateName }

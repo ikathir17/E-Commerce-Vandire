@@ -5,246 +5,282 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
+import { FiEdit2, FiSave, FiX, FiUser, FiMail, FiShoppingBag, FiHeart } from 'react-icons/fi';
 
 const Profile = () => {
-  const { token, backendUrl, userEmail } = useContext(ShopContext);
+  const { token, backendUrl, userEmail, wishlist } = useContext(ShopContext);
   const navigate = useNavigate();
-  const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
-    }
-  });
+  const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
-    const loadUserData = () => {
-      console.log('Loading user data from localStorage');
-      
+    const fetchUserData = async () => {
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
       try {
-        // Load user data from localStorage
-        const savedUserData = JSON.parse(localStorage.getItem('userData')) || {};
-        console.log('Loaded user data from localStorage:', savedUserData);
-        
-        setUserData({
-          name: savedUserData.name || '',
-          email: userEmail || savedUserData.email || '',
-          phone: savedUserData.phone || '',
-          address: {
-            street: savedUserData.address?.street || '',
-            city: savedUserData.address?.city || '',
-            state: savedUserData.address?.state || '',
-            zipCode: savedUserData.address?.zipCode || '',
-            country: savedUserData.address?.country || ''
-          }
+        const response = await axios.get(`${backendUrl}/api/user/me`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
         });
         
+        if (response.data?.success && response.data.user) {
+          const { user } = response.data;
+          
+          setUserData({
+            _id: user._id,
+            name: user.name || 'No Name',
+            email: user.email || 'No Email',
+            orderCount: user.orders?.length || 0,
+            wishlistCount: wishlist?.length || 0,
+            createdAt: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'
+          });
+          setTempName(user.name || '');
+        } else {
+          throw new Error(response.data?.message || 'Failed to load user data');
+        }
       } catch (error) {
-        console.error('Error loading profile data:', error);
-        toast.error('Failed to load profile data');
+        console.error('Error fetching user data:', error.message);
+        
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+          localStorage.removeItem('token');
+          navigate('/login');
+        } else {
+          toast.error(`Failed to load profile data: ${error.response?.data?.message || error.message}`);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUserData();
-  }, [userEmail]); // Update when userEmail changes
+    fetchUserData();
+  }, [token, navigate, backendUrl, wishlist]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setUserData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
+  const handleNameChange = (e) => {
+    setTempName(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!tempName.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/user/update-name`,
+        { name: tempName },
+        { 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          } 
         }
-      }));
-    } else {
+      );
+
       setUserData(prev => ({
         ...prev,
-        [name]: value
+        name: tempName
       }));
+      
+      toast.success('Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    try {
-      // Save to local storage
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      toast.success('Profile saved successfully');
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Failed to save profile changes');
+  const startEditing = () => {
+    if (userData) {
+      setTempName(userData.name);
+      setIsEditing(true);
     }
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setTempName(userData.name);
   };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mb-4"></div>
-        <p>Loading profile data...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
-  if (!token) {
-    console.log('No token in render, redirecting to login');
-    navigate('/login');
+  if (!userData) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Redirecting to login...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Failed to load profile data</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">My Profile</h1>
-      
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Personal Information</h2>
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <div className="space-x-2">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-              >
-                Save Changes
-              </button>
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
+          <p className="text-gray-600">Manage your account details and preferences</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                value={userData.name || ''}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={userData.email || ''}
-                disabled
-                className="w-full px-4 py-2 border rounded bg-gray-100"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                value={userData.phone || ''}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <h3 className="text-lg font-medium mb-4">Address</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-                <input
-                  type="text"
-                  name="address.street"
-                  value={userData.address?.street || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                />
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          {/* Profile Header */}
+          <div className="px-6 py-8 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center">
+                <div className="h-20 w-20 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-3xl font-bold">
+                  {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="ml-6">
+                  <h2 className="text-2xl font-bold">{userData.name}</h2>
+                  <p className="text-gray-300">{userData.email}</p>
+                </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input
-                  type="text"
-                  name="address.city"
-                  value={userData.address?.city || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State/Province</label>
-                <input
-                  type="text"
-                  name="address.state"
-                  value={userData.address?.state || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ZIP/Postal Code</label>
-                <input
-                  type="text"
-                  name="address.zipCode"
-                  value={userData.address?.zipCode || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                <input
-                  type="text"
-                  name="address.country"
-                  value={userData.address?.country || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-black focus:border-transparent"
-                />
+              <div className="mt-4 md:mt-0">
+                <span className="inline-block bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                  Member since {userData.createdAt}
+                </span>
               </div>
             </div>
           </div>
-        </form>
+
+          {/* Stats */}
+          <div className="border-b border-gray-200">
+            <div className="px-6 py-4">
+              <div className="flex flex-wrap -mx-2">
+                <div className="w-full md:w-1/2 lg:w-1/3 px-2 mb-4 lg:mb-0">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                        <FiShoppingBag className="w-6 h-6" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">Orders</p>
+                        <p className="text-2xl font-semibold text-gray-900">{userData.orderCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full md:w-1/2 lg:w-1/3 px-2 mb-4 lg:mb-0">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-pink-100 text-pink-600">
+                        <FiHeart className="w-6 h-6" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">Wishlist</p>
+                        <p className="text-2xl font-semibold text-gray-900">{userData.wishlistCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full md:w-1/2 lg:w-1/3 px-2">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-green-100 text-green-600">
+                        <FiUser className="w-6 h-6" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-500">User ID</p>
+                        <p className="text-sm font-mono text-gray-900 truncate">{userData._id}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Form */}
+          <div className="px-6 py-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
+              {!isEditing ? (
+                <button
+                  onClick={startEditing}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <FiEdit2 className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="space-x-2">
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <FiX className="mr-2 h-4 w-4" />
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <FiSave className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div className="sm:col-span-3">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    Full name
+                  </label>
+                  <div className="mt-1">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        value={tempName}
+                        onChange={handleNameChange}
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        required
+                      />
+                    ) : (
+                      <p className="mt-1 text-sm text-gray-900">{userData.name}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-4">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email address
+                  </label>
+                  <div className="mt-1">
+                    <p className="text-sm text-gray-900">{userData.email}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

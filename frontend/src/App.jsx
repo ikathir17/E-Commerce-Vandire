@@ -17,6 +17,7 @@ import PlaceOrder from './pages/PlaceOrder';
 import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
 import Verify from './pages/Verify';
+import Profile from './pages/Profile';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -113,6 +114,11 @@ const App = () => {
             <Route path='wishlist' element={
               <ProtectedRoute>
                 <Wishlist />
+              </ProtectedRoute>
+            } />
+            <Route path='profile' element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
           </Route>

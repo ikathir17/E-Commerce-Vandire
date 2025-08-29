@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { assets } from '../assets/assets';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
@@ -11,6 +11,8 @@ const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
     const { getCartCount, navigate, token, setToken, setCartItems, wishlist } = useContext(ShopContext);
     const location = useLocation();
     const isHomePage = location.pathname === '/'; // Check if current route is home page
@@ -60,7 +62,35 @@ const Navbar = () => {
     // Close mobile menu when route changes
     useEffect(() => {
         setIsMobileMenuOpen(false);
+        setIsMobileNavOpen(false);
+        document.body.style.overflow = 'auto';
     }, [location]);
+
+    // Close mobile menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+                // Check if the click is not on the hamburger button
+                const hamburgerButton = document.querySelector('.mobile-menu-button');
+                if (!hamburgerButton || !hamburgerButton.contains(event.target)) {
+                    setIsMobileMenuOpen(false);
+                    document.body.style.overflow = 'auto';
+                }
+            }
+        };
+
+        // Toggle body scroll when mobile menu is open
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMobileMenuOpen]);
 
     // Add scroll effect
     useEffect(() => {
@@ -71,8 +101,21 @@ const Navbar = () => {
             }
         };
 
+        // Close mobile menu on resize if window becomes larger than md breakpoint
+        const handleResize = () => {
+            if (window.innerWidth >= 768) { // md breakpoint
+                setIsMobileMenuOpen(false);
+                document.body.style.overflow = 'auto';
+            }
+        };
+
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleResize);
+        };
     }, [scrolled]);
 
     const toggleUserMenu = () => {
@@ -355,15 +398,23 @@ const Navbar = () => {
                         </motion.div>
 
                         {/* Mobile menu button */}
-                        <motion.button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className={`md:hidden p-2 transition-colors ${isHomePage && !scrolled ? 'text-white/80 hover:text-white' : 'text-gray-700 hover:text-black'}`}
+                        <button
+                            onClick={() => {
+                                setIsMobileMenuOpen(!isMobileMenuOpen);
+                                if (!isMobileMenuOpen) {
+                                    setActiveDropdown(null);
+                                }
+                            }}
+                            className={`md:hidden p-2 rounded-md focus:outline-none mobile-menu-button ${isHomePage && !scrolled ? 'text-white' : 'text-gray-700 hover:text-gray-900'}`}
+                            aria-expanded={isMobileMenuOpen}
                             aria-label="Toggle menu"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
                         >
-                            {isMobileMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
-                        </motion.button>
+                            {isMobileMenuOpen ? (
+                                <FiX className="h-6 w-6" />
+                            ) : (
+                                <FiMenu className="h-6 w-6" />
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -371,94 +422,100 @@ const Navbar = () => {
             {/* Mobile menu */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
-                    <motion.div 
-                        className="md:hidden bg-white shadow-lg overflow-hidden"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    >
+                    <>
                         <motion.div 
-                            className="px-4 pt-2 pb-4 space-y-2"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.15 }}
+                            ref={mobileMenuRef}
+                            className="md:hidden fixed inset-y-0 right-0 w-4/5 max-w-sm bg-white z-40 shadow-xl overflow-y-auto"
+                            initial={{ x: '100%', opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: '100%', opacity: 0 }}
+                            transition={{ type: 'tween', ease: 'easeInOut' }}
                         >
-                            {navLinks.map((link, index) => (
-                                <motion.div 
-                                    key={link.to} 
-                                    className="border-b border-gray-100"
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                                >
-                                    <NavLink
-                                        to={link.to}
-                                        className={({ isActive }) =>
-                                            `block px-3 py-3 text-base font-medium ${
-                                                isActive ? 'text-black' : 'text-gray-600 hover:text-black'
-                                            }`
-                                        }
+                            <div className="px-6 py-4 space-y-1">
+                                <div className="flex justify-between items-center mb-6 pt-4">
+                                    <h3 className="text-lg font-medium text-gray-900">Menu</h3>
+                                    <button
                                         onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-2 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                                        aria-label="Close menu"
                                     >
-                                        {link.label}
-                                    </NavLink>
-                                </motion.div>
-                            ))}
-                            {token ? (
-                                <>
-                                    <motion.div 
-                                        className="border-b border-gray-100"
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
-                                    >
+                                        <FiX className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                
+                                <div className="border-t border-gray-200 pt-4">
+                                    {navLinks.map((link) => (
+                                        <div key={link.to} className="border-b border-gray-100">
+                                            <NavLink
+                                                to={link.to}
+                                                className={({ isActive }) =>
+                                                    `flex items-center justify-between px-2 py-4 text-base font-medium rounded-md ${
+                                                        isActive
+                                                            ? 'text-indigo-600'
+                                                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                                                    }`
+                                                }
+                                            >
+                                                <span>{link.label}</span>
+                                                <FiChevronRight className="h-4 w-4 text-gray-400" />
+                                            </NavLink>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                <div className="pt-4 border-t border-gray-200">
+                                    <div className="flex items-center px-2 py-4">
+                                        <div className="flex-shrink-0">
+                                            <FiUser className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                        <div className="ml-3">
+                                            <div className="text-base font-medium text-gray-800">
+                                                {token ? 'My Account' : 'Sign In'}
+                                            </div>
+                                            {token && (
+                                                <div className="text-sm font-medium text-gray-500">
+                                                    View profile & orders
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-1">
                                         <Link
-                                            to="/orders"
-                                            className="flex items-center px-6 py-4 text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                                            to={token ? '/account' : '/login'}
+                                            className="block w-full px-4 py-2 text-base font-medium text-center text-white bg-indigo-600 hover:bg-indigo-700 rounded-md"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
-                                            <span>My Orders</span>
+                                            {token ? 'Account' : 'Sign In'}
                                         </Link>
-                                    </motion.div>
-                                    <motion.div 
-                                        className="border-b border-gray-100"
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ duration: 0.2, delay: (navLinks.length + 1) * 0.05 }}
-                                    >
-                                        <button
-                                            onClick={() => {
-                                                handleLogout();
-                                                setIsMobileMenuOpen(false);
-                                            }}
-                                            className="flex items-center w-full text-left px-6 py-4 text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                        >
-                                            <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
-                                            <span>Logout</span>
-                                        </button>
-                                    </motion.div>
-                                </>
-                            ) : (
-                                <motion.div 
-                                    className="border-b border-gray-100"
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
-                                >
-                                    <Link
-                                        to="/login"
-                                        className="flex items-center px-6 py-4 text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        <FiChevronRight className="mr-3 w-4 h-4 opacity-70" />
-                                        <span>Login / Register</span>
-                                    </Link>
-                                </motion.div>
-                            )}
+                                        {token && (
+                                            <button
+                                                onClick={() => {
+                                                    handleLogout();
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                                className="mt-3 block w-full px-4 py-2 text-base font-medium text-center text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                                            >
+                                                Sign Out
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
-                    </motion.div>
+                        
+                        {/* Overlay */}
+                        <motion.div
+                            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                document.body.style.overflow = 'auto';
+                            }}
+                        />
+                    </>
                 )}
             </AnimatePresence>
         </motion.nav>
